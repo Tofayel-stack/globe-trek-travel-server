@@ -38,14 +38,6 @@ async function dbConnect() {
       await client.connect();
       console.log('connected with mongodb');
 
-
-                            // collections
-                            const destinationCollection = client.db("globe-trek-travel").collection("destinationData");
-
-                            // Create text index outside the route handler
-                            await destinationCollection.createIndex({ name: 'text' })
-
-
     }
     catch{err => console.log(err)}
   }
@@ -136,15 +128,15 @@ app.get('/user',async(req,res)=>{
 app.get('/availableDestination',async (req,res) => {
 
     try {
-      const query = req.query.search;
-      console.log(query);
-
-       const result = await destinationCollection.find({ $text: { $search: query } }).toArray();
-
-
+      const searchText = req.query.search;
+      const query = {name: { $regex: new RegExp( searchText , "i" )  }}
+      const result = await destinationCollection.find(query).toArray()
       if (result) {
-        console.log("search result ", result);
-      }
+        res.status(200).send({
+          success: true,
+          message: `successfully found`,
+          data: result,
+      })}
     } catch (error) {
       console.log(error.message);
       res.status(404).send({
